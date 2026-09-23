@@ -4,7 +4,7 @@ import { GisMap } from '../components/common/GisMap';
 import { ProspectivityModal } from '../components/prospectivity/ProspectivityModal';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
-import { Layers, MapPin, Sparkles, Filter, ShieldCheck, CheckCircle2, ChevronRight, Play } from 'lucide-react';
+import { Layers, MapPin, Sparkles, Filter, ShieldCheck, CheckCircle2, ChevronRight, Play, Search, X } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 
 export function ProspectivityPage({ onNavigate }) {
@@ -12,6 +12,7 @@ export function ProspectivityPage({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState('B-12');
   const [selectedBlockForModal, setSelectedBlockForModal] = useState(null);
+  const [locationSearchInput, setLocationSearchInput] = useState('');
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -23,6 +24,16 @@ export function ProspectivityPage({ onNavigate }) {
     }
     load();
   }, []);
+
+  const handleQuickLocationSelect = (blockId, locationName) => {
+    setSelectedBlockId(blockId);
+    setLocationSearchInput(locationName);
+    addToast({
+      title: 'Location Selected',
+      message: `Map centered on ${locationName}. Reviewing prospectivity parameters...`,
+      type: 'success'
+    });
+  };
 
   if (loading || !data) {
     return <div className="p-8 text-slate-400 animate-pulse">Initializing Hero Prospectivity GIS Engine...</div>;
@@ -65,9 +76,9 @@ export function ProspectivityPage({ onNavigate }) {
       </div>
 
       {/* Hero GIS Map Showcase (Large visual centerpiece) */}
-      <div className="relative">
-        {/* Quick Data Indicators Strip above Map */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+      <div className="relative space-y-3">
+        {/* Quick Data Indicators & Location Jump Strip above Map */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="bg-white p-3 rounded-xl border border-slate-200 text-xs flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-50 text-blue-900 border border-blue-200">
               <Layers className="w-4 h-4" />
@@ -109,7 +120,32 @@ export function ProspectivityPage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Hero Full GIS Map Component */}
+        {/* Location Quick Jump Tag Pills */}
+        <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-2 overflow-x-auto text-xs">
+          <span className="font-bold text-slate-700 uppercase text-[10px] tracking-wider shrink-0 flex items-center gap-1">
+            <Search className="w-3.5 h-3.5 text-blue-600" /> Quick Location Jumps:
+          </span>
+          {[
+            { id: 'B-12', label: 'Block B-12 (Mansar South)' },
+            { id: 'C-04', label: 'Block C-04 (Dongri Ext)' },
+            { id: 'B-13', label: 'Block B-13 (Bhandara West)' },
+            { id: 'A-07', label: 'Block A-07 (Tirodi North)' }
+          ].map((loc) => (
+            <button
+              key={loc.id}
+              onClick={() => handleQuickLocationSelect(loc.id, loc.label)}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                selectedBlockId === loc.id
+                  ? 'bg-[#0b2545] text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {loc.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Hero Full GIS Map Component with Integrated Search */}
         <GisMap
           blocks={data.blocks}
           boreholes={data.boreholes}
